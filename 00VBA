@@ -1,0 +1,39 @@
+Sub ContarPalabras() 
+    Dim ws As Worksheet
+    Dim dict As Object
+    Dim cell As Range, palabra As String
+    Dim palabras() As String
+    Dim i As Integer
+    
+    Set ws = ActiveSheet
+    Set dict = CreateObject("Scripting.Dictionary")
+  
+    For Each cell In ws.Range("E2:E1607")
+        If Not IsEmpty(cell.Value) Then
+            ' Separar las palabras por espacios
+            palabras = Split(cell.Value, " ")
+
+            For i = LBound(palabras) To UBound(palabras)
+                palabra = Trim(palabras(i))
+                If Len(palabra) > 0 Then
+                    If dict.exists(palabra) Then
+                        dict(palabra) = dict(palabra) + 1
+                    Else
+                        dict.Add palabra, 1
+                    End If
+                End If
+            Next i
+        End If
+    Next cell
+
+    Dim fila As Integer
+    fila = 2 ' Iniciar en la fila 2
+    
+    ws.Range("U:V").ClearContents ' Limpiar las columnas antes de escribir
+    ws.Cells(1, 21).Value = "Palabra" ' Encabezado columna U
+    ws.Cells(1, 22).Value = "Frecuencia" ' Encabezado columna V
+    
+    Dim key As Variant
+    For Each key In dict.keys
+        ws.Cells(fila, 21).Value = key
+        ws.Cells(fila, 22).Value = dict(key)
