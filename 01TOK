@@ -1,0 +1,65 @@
+# 📌 Instalar librerías necesarias (si no están instaladas)
+!pip install pandas nltk openpyxl
+
+# 📌 Importar librerías
+import pandas as pd
+import nltk
+from nltk.tokenize import word_tokenize
+from google.colab import files
+
+# 📌 Descargar el tokenizer de nltk
+nltk.download("punkt")
+
+# 📌 Subir archivo manualmente desde Google Colab
+print("📂 Sube tu archivo Excel con respuestas:")
+uploaded = files.upload()
+
+# 📌 Obtener el nombre del archivo subido
+file_name = list(uploaded.keys())[0]
+
+# 📌 Definir las categorías y palabras clave
+categorias = {
+    "01_Contratos": ["contratos", "contratación", "convenios", "contratados", "contrataciones", "modificatorios", "monto erogado", "pago por prestación"],
+    "02_Proyectos": ["proyectos", "procesos", "medidas de seguridad", "organigrama", "víctimas", "consejo directivo", "director general", "observaciones"],
+    "03_Valuaciones": ["valuaciones", "viabilidad actuarial", "pago de pensiones", "estudio actuarial", "estudios actuariales", "focus group", "estudios", "investigaciones"],
+    "04_Farmacia": ["farmacia", "farmacias", "medicinas", "medicina", "venta de medicinas", "vacuna", "franquiciatarios", "sector salud", "ISAPEG", "farmacéutica", "fármacos"],
+    "05_Viajes": ["viajes", "comisiones", "gastos de representación", "viáticos", "vuelos", "pasajes", "aéreos", "hospedaje", "viaticos", "hoteles", "casetas", "consumo", "consumos"],
+    "06_Legal": ["fundamento", "legal", "igualdad", "ley", "artículos", "decretos", "legislativos", "documentación", "acuerdos", "normatividad", "aclaración", "aclaraciones"],
+    "07_Inmuebles": ["estacionamiento", "estacionamientos", "inmueble", "inmuebles", "donación", "arrendamiento", "arrendamientos", "arrendados", "arrendatario", "plaza", "comercio", "comercial"],
+    "08_Personal": ["miembros", "labora", "puesto", "tabular", "cargo", "funcionario", "salario", "laborar", "servidores", "servidor", "público", "laborando", "trabajadores", "trabajador", "funcionarios"],
+    "09_Créditos": ["creditos", "créditos", "pensiones", "prestaciones", "préstamos", "prestamo", "hipotecario", "garantía", "préstamo", "garantia", "hipotecaria", "cuotas", "pensionados"],
+    "10_Presupuesto": ["monto", "dinero", "presupuestado", "invertidos", "presupuestos", "cuenta pública", "presupuesto", "financiero", "recaudadora", "dinero destinado", "monto erogado"],
+    "11_Proveedores": ["proveedor", "proveedores", "empresa", "firmados", "servicios", "facturas", "padron de proveedores", "empresas", "subasta", "concurso", "almacen", "distribución", "servicios"],
+    "12_Transporte": ["combustibles", "mantenimiento", "vehículos", "recursos materiales", "servicios", "taller", "vehicular", "gasolina", "logotipos", "conducción", "matrícula", "traslado", "automóviles", "móvil"]
+}
+
+# 📌 Cargar el archivo Excel
+df = pd.read_excel(file_name)
+
+# 📌 Verificar que la columna "Respuesta" existe
+if "Respuesta" not in df.columns:
+    raise ValueError("⚠️ ERROR: La columna 'Respuesta' no existe en el archivo. Verifica que tu archivo tenga una columna llamada 'Respuesta'.")
+
+# 📌 Función para clasificar cada respuesta
+def clasificar_respuesta(respuesta):
+    tokens = word_tokenize(str(respuesta).lower())  # Tokeniza y convierte a minúsculas
+    clasificacion = {cat: 0 for cat in categorias}  # Inicializar con 0 todas las categorías
+    
+    for palabra in tokens:
+        for categoria, palabras in categorias.items():
+            if palabra in palabras:
+                clasificacion[categoria] = 1  # Marcar con 1 si la palabra coincide
+
+    return pd.Series(clasificacion)
+
+# 📌 Aplicar clasificación
+df[list(categorias.keys())] = df["Respuesta"].apply(clasificar_respuesta)
+
+# 📌 Guardar el archivo con la clasificación
+output_file = "respuestas_categorizadas.xlsx"
+df.to_excel(output_file, index=False)
+
+# 📌 Descargar el archivo procesado
+files.download(output_file)
+
+print("✅ Clasificación completada. Descarga el archivo 'respuestas_categorizadas.xlsx'.")
