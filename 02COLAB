@@ -1,0 +1,98 @@
+from statsmodels.tsa.arima.model import ARIMA
+import matplotlib.pyplot as plt
+
+# Crear el modelo ARIMA
+modelo_arima = ARIMA(df_monthly["Solicitudes"], order=(5,1,0))  # (p,d,q)
+modelo_arima_fit = modelo_arima.fit()
+
+# Predicción con ARIMA
+df_monthly["ARIMA_Pred"] = modelo_arima_fit.predict()
+
+# Graficar resultados
+plt.figure(figsize=(12,6))
+plt.plot(df_monthly["Fecha"], df_monthly["Solicitudes"], label="Solicitudes Reales", color="blue")
+plt.plot(df_monthly["Fecha"], df_monthly["ARIMA_Pred"], label="Predicción ARIMA", color="red")
+plt.xlabel("Fecha")
+plt.ylabel("Número de Solicitudes")
+plt.title("Predicción con ARIMA")
+plt.legend()
+plt.grid()
+plt.show()
+
+
+//////////////////////////////////////////
+
+
+from sklearn.ensemble import RandomForestRegressor
+from sklearn.model_selection import train_test_split
+from sklearn.metrics import mean_squared_error
+import numpy as np
+
+# Crear variables de entrada para Random Forest
+df_monthly["Año"] = df_monthly["Fecha"].dt.year
+df_monthly["Mes"] = df_monthly["Fecha"].dt.month
+
+# Definir variables X (entrada) e Y (salida)
+X = df_monthly[["Año", "Mes"]]
+y = df_monthly["Solicitudes"]
+
+# Separar datos en entrenamiento y prueba
+X_train, X_test, y_train, y_test = train_test_split(X, y, test_size=0.2, random_state=42)
+
+# Crear y entrenar el modelo Random Forest
+modelo_rf = RandomForestRegressor(n_estimators=100, random_state=42)
+modelo_rf.fit(X_train, y_train)
+
+# Hacer predicciones
+df_monthly["RF_Pred"] = modelo_rf.predict(X)
+
+# Graficar comparación
+plt.figure(figsize=(12,6))
+plt.plot(df_monthly["Fecha"], df_monthly["Solicitudes"], label="Solicitudes Reales", color="blue")
+plt.plot(df_monthly["Fecha"], df_monthly["RF_Pred"], label="Predicción Random Forest", color="green")
+plt.xlabel("Fecha")
+plt.ylabel("Número de Solicitudes")
+plt.title("Predicción con Random Forest")
+plt.legend()
+plt.grid()
+plt.show()
+
+
+
+////////////////////////////////////////////////////////////////
+
+
+import pandas as pd
+from statsmodels.tsa.arima.model import ARIMA
+import matplotlib.pyplot as plt
+
+# Cargar datos
+df = pd.read_csv("base.csv")
+
+# Convertir fecha
+df["Fecha"] = pd.to_datetime(df["Fecha"], errors="coerce")
+
+# Seleccionar un clasificador específico
+clasificador_seleccionado = "CONTRATOS"  # Cambia por el que quieras analizar
+df_clasificador = df[df["Clasificador"] == clasificador_seleccionado]
+
+# Agrupar por mes
+df_monthly = df_clasificador.resample("M", on="Fecha").size().reset_index(name="Solicitudes")
+
+# Entrenar ARIMA
+modelo_arima = ARIMA(df_monthly["Solicitudes"], order=(5,1,0))
+modelo_arima_fit = modelo_arima.fit()
+
+# Predicción
+df_monthly["ARIMA_Pred"] = modelo_arima_fit.predict()
+
+# Graficar
+plt.figure(figsize=(12,6))
+plt.plot(df_monthly["Fecha"], df_monthly["Solicitudes"], label="Solicitudes Reales", color="blue")
+plt.plot(df_monthly["Fecha"], df_monthly["ARIMA_Pred"], label="Predicción ARIMA", color="red")
+plt.xlabel("Fecha")
+plt.ylabel("Número de Solicitudes")
+plt.title(f"Predicción ARIMA para {clasificador_seleccionado}")
+plt.legend()
+plt.grid()
+plt.show()
